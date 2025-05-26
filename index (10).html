@@ -1,0 +1,73 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Treasure Wave Predictor - SASUKEE (Key Protected)</title>
+  <style>
+    body { background: #0d0d0d; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
+    .container { max-width: 600px; margin: auto; background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 0 10px #09f; }
+    input, button { padding: 10px; margin: 10px 0; border-radius: 5px; border: none; font-size: 16px; }
+    table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+    th, td { padding: 8px; border-bottom: 1px solid #333; }
+    th { background: #222; }
+  </style>
+</head>
+<body>
+  <div class="container" id="login">
+    <h2>Enter Access Key</h2>
+    <input id="keyInput" placeholder="Enter key" />
+    <button onclick="login()">Unlock</button>
+  </div>
+  <div class="container" id="app" style="display:none;">
+    <h2>Treasure Wave Prediction Panel</h2>
+    <button onclick="predict()">Predict Next Round</button>
+    <h3 id="result"></h3>
+    <table id="historyTable">
+      <thead>
+        <tr><th>Round ID</th><th>Predicted Chest</th><th>Risk</th></tr>
+      </thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const history = [];
+
+    async function login() {
+      const key = document.getElementById("keyInput").value;
+      const res = await fetch("http://localhost:3000/api/validate-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key })
+      });
+      const data = await res.json();
+      if (data.valid) {
+        document.getElementById("login").style.display = "none";
+        document.getElementById("app").style.display = "block";
+      } else {
+        alert("Invalid Key!");
+      }
+    }
+
+    function predict() {
+      const roundId = Math.floor(1000000 + Math.random() * 9000000);
+      const safe = [2, 4];
+      const risky = [1, 3, 5];
+      const roll = Math.random();
+      const chest = roll < 0.7 ? safe[Math.floor(Math.random() * safe.length)] : risky[Math.floor(Math.random() * risky.length)];
+      const risk = roll < 0.7 ? "Low" : "Medium";
+      document.getElementById("result").innerText = `Round ${roundId}: Chest #${chest} (Risk: ${risk})`;
+      history.unshift({ roundId, chest, risk });
+      updateHistory();
+    }
+
+    function updateHistory() {
+      const body = document.getElementById("historyBody");
+      body.innerHTML = "";
+      history.forEach(e => {
+        body.innerHTML += `<tr><td>${e.roundId}</td><td>Chest #${e.chest}</td><td>${e.risk}</td></tr>`;
+      });
+    }
+  </script>
+</body>
+</html>
